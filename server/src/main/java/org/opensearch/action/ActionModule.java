@@ -330,6 +330,8 @@ import org.opensearch.extensions.rest.RestInitializeExtensionAction;
 import org.opensearch.extensions.rest.RestSendToExtensionAction;
 import org.opensearch.identity.IdentityService;
 import org.opensearch.index.seqno.RetentionLeaseActions;
+import org.opensearch.index.store.remote.filecache.FileCache;
+import org.opensearch.node.Node;
 import org.opensearch.indices.SystemIndices;
 import org.opensearch.persistent.CompletionPersistentTaskAction;
 import org.opensearch.persistent.RemovePersistentTaskAction;
@@ -378,6 +380,7 @@ import org.opensearch.rest.action.admin.cluster.RestNodesInfoAction;
 import org.opensearch.rest.action.admin.cluster.RestNodesStatsAction;
 import org.opensearch.rest.action.admin.cluster.RestNodesUsageAction;
 import org.opensearch.rest.action.admin.cluster.RestPendingClusterTasksAction;
+import org.opensearch.rest.action.admin.cluster.RestPruneCacheAction;
 import org.opensearch.rest.action.admin.cluster.RestPutRepositoryAction;
 import org.opensearch.rest.action.admin.cluster.RestPutStoredScriptAction;
 import org.opensearch.rest.action.admin.cluster.RestReloadSecureSettingsAction;
@@ -839,7 +842,7 @@ public class ActionModule extends AbstractModule {
         );
     }
 
-    public void initRestHandlers(Supplier<DiscoveryNodes> nodesInCluster) {
+    public void initRestHandlers(Supplier<DiscoveryNodes> nodesInCluster, Node node) {
         List<AbstractCatAction> catActions = new ArrayList<>();
         List<AbstractListAction> listActions = new ArrayList<>();
         Consumer<RestHandler> registerHandler = handler -> {
@@ -1063,6 +1066,9 @@ public class ActionModule extends AbstractModule {
         registerHandler.accept(new RestRemoteStoreStatsAction());
         registerHandler.accept(new RestRestoreRemoteStoreAction());
         registerHandler.accept(new RestRemoteStoreMetadataAction());
+
+        // FileCache API
+        registerHandler.accept(new RestPruneCacheAction(node));
 
         // pull-based ingestion API
         registerHandler.accept(new RestPauseIngestionAction());
