@@ -10,6 +10,7 @@ package org.opensearch.rest.action.admin.cluster;
 
 import org.opensearch.core.rest.RestStatus;
 import org.opensearch.index.store.remote.filecache.FileCache;
+import org.opensearch.node.Node;
 import org.opensearch.rest.RestRequest;
 import org.opensearch.test.rest.FakeRestRequest;
 import org.opensearch.test.rest.RestActionTestCase;
@@ -37,22 +38,30 @@ public class RestPruneCacheActionTests extends RestActionTestCase {
     }
 
     public void testRoutes() {
-        RestPruneCacheAction action = new RestPruneCacheAction(mock(FileCache.class));
+        Node mockNode = mock(Node.class);
+        RestPruneCacheAction action = new RestPruneCacheAction(mockNode);
         assertEquals(1, action.routes().size());
         assertEquals(RestRequest.Method.POST, action.routes().get(0).getMethod());
         assertEquals("/_cache/remote/prune", action.routes().get(0).getPath());
     }
 
     public void testGetName() {
-        RestPruneCacheAction action = new RestPruneCacheAction(mock(FileCache.class));
+        Node mockNode = mock(Node.class);
+        RestPruneCacheAction action = new RestPruneCacheAction(mockNode);
         assertEquals("prune_cache_action", action.getName());
     }
 
     public void testPrepareRequest() throws Exception {
+        // 1. Mock the FileCache service
         FileCache mockFileCache = mock(FileCache.class);
-        when(mockFileCache.prune()).thenReturn(12345678L);
+        final long bytesPruned = 12345678L;
+        when(mockFileCache.prune()).thenReturn(bytesPruned);
 
-        RestPruneCacheAction action = new RestPruneCacheAction(mockFileCache);
+        // 2. Mock the Node (Service Locator) to return the mocked service
+        Node mockNode = mock(Node.class);
+        when(mockNode.fileCache()).thenReturn(mockFileCache);
+
+        RestPruneCacheAction action = new RestPruneCacheAction(mockNode);
         RestRequest request = new FakeRestRequest();
 
         // Test that the action prepares correctly without throwing exceptions

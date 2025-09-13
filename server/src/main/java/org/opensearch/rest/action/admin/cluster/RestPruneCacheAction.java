@@ -11,6 +11,7 @@ package org.opensearch.rest.action.admin.cluster;
 import org.opensearch.core.rest.RestStatus;
 import org.opensearch.core.xcontent.XContentBuilder;
 import org.opensearch.index.store.remote.filecache.FileCache;
+import org.opensearch.node.Node;
 import org.opensearch.rest.BaseRestHandler;
 import org.opensearch.rest.BytesRestResponse;
 import org.opensearch.rest.RestRequest;
@@ -32,8 +33,10 @@ public class RestPruneCacheAction extends BaseRestHandler {
 
     private final FileCache fileCache;
 
-    public RestPruneCacheAction(FileCache fileCache) {
-        this.fileCache = fileCache;
+    // The constructor now accepts the 'Node' object as the Service Locator.
+    public RestPruneCacheAction(Node node) {
+        // The handler uses the locator to retrieve the specific service it needs.
+        this.fileCache = node.fileCache();
     }
 
     @Override
